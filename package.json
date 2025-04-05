@@ -1,0 +1,27 @@
+{
+  "name": "proxy-chain-router",
+  "version": "1.0.0",
+  "description": "A universal ephemeral-proxy routing solution in TypeScript/Node.js",
+  "author": {
+    "name": "Adam K",
+    "email": "muttonchop@users.noreply.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muttonchop/proxy-chain-router.git"
+  },
+  "license": "MIT",
+  "main": "dist/index.js",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "eslint": "^9.24.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint . --ext .ts"
+  }
+}
