@@ -13,19 +13,19 @@
   "license": "MIT",
   "main": "dist/index.js",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.29.0",
-    "@typescript-eslint/parser": "^8.29.0",
+    "@eslint/js": "^9.24.0",
     "eslint": "^9.24.0",
-    "eslint-config-airbnb-typescript": "^18.0.0",
-    "eslint-plugin-import": "^2.31.0",
+    "eslint-config-prettier": "^10.1.1",
+    "globals": "^16.0.0",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.29.0",
     "vitest": "^3.1.1"
   },
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
