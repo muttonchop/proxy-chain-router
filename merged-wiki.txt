@@ -1,0 +1,177 @@
+# Proxy Chain Router (REST API Service)
+
+Proxy Chain Router is a deployable REST API service that manages a proxy-chain server,
+routing rules, and runtime configuration. It acts as an API overlay for proxy-chain,
+maintains state for the running proxy server, and allows on-the-fly configuration
+changes.
+
+## Status
+- Version: 0.1.0
+- Persistence: JSON config file today; Postgres-backed persistence is required in the next version.
+- UI: Planned and will be served by the API process.
+
+## Current capabilities
+- Runs a proxy-chain server plus a control API.
+- Updates listen settings and routing rules through the REST API without restart.
+- Route matching by domain, hostname, port, isHttp, and method.
+- Upstream can be a single URL or a list (round-robin per route).
+- Basic metrics: total requests/errors, per-upstream counts, and last error.
+- Config is loaded from disk on startup and persisted when updated via the API.
+
+## Direction (target behavior)
+- Postgres-backed persistence is required for configuration and runtime state.
+- UI is served by this API for live status and configuration edits.
+
+## API authentication
+All /v1/* endpoints require a token.
+- Authorization: Bearer <token>
+- X-API-Token: <token>
+
+## API endpoints
+- GET /health
+- POST /v1/reload
+- GET /v1/proxy
+- PUT /v1/proxy
+- GET /v1/routes
+- PUT /v1/routes
+- GET /v1/metrics
+
+## Smoke tests
+PowerShell:
+```powershell
+$env:API_TOKEN="change-me"
+curl http://localhost:3000/health
+curl -H "Authorization: Bearer $env:API_TOKEN" http://localhost:3000/v1/proxy
+```
+
+POSIX shell:
+```bash
+API_TOKEN=change-me
+curl http://localhost:3000/health
+curl -H "Authorization: Bearer $API_TOKEN" http://localhost:3000/v1/proxy
+```
+
+Script:
+```bash
+API_TOKEN=change-me node scripts/smoke-test.js
+```
+
+PowerShell (no session pollution):
+```powershell
+powershell -NoProfile -Command "$env:API_TOKEN='change-me'; npm run smoke"
+```
+
+## Configuration
+Configuration is loaded from disk on startup and persisted when updated via the API.
+The API token is required.
+
+Example config file (config.example.json):
+```json
+{
+  "api": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "token": "change-me"
+  },
+  "proxy": {
+    "listen": {
+      "host": "0.0.0.0",
+      "port": 8080,
+      "serverType": "http"
+    },
+    "routes": [
+      {
+        "name": "google",
+        "match": {
+          "domain": {
+            "pattern": "google\\.com$",
+            "flags": "i"
+          }
+        },
+        "upstream": "http://user:pass@us-proxy.example.com:8000"
+      },
+      {
+        "name": "fallback",
+        "upstream": null
+      }
+    ],
+    "verbose": false
+  }
+}
+```
+
+Environment overrides:
+- PROXY_ROUTER_CONFIG
+- PROXY_ROUTER_API_TOKEN
+- PROXY_ROUTER_API_HOST
+- PROXY_ROUTER_API_PORT
+
+CLI:
+- node dist/main.js --config config.json
+
+## Docker
+The Docker image runs both the REST API and the proxy server.
+Default ports are 3000 (API) and 8080 (proxy), driven by the config file.
+The image ships with `/data/config.json` (copied from `config.example.json`).
+
+Build:
+```bash
+docker build -t proxy-chain-router .
+```
+
+Run:
+```bash
+docker run --rm -p 3000:3000 -p 8080:8080 \
+  -v $(pwd)/config.json:/data/config.json \
+  -e PROXY_ROUTER_CONFIG=/data/config.json \
+  proxy-chain-router
+```
+
+Adjust the volume path for your shell if needed.
+
+Compose:
+```bash
+docker compose up --build
+```
+
+## Local Docker persistence (Postgres)
+When Postgres support is added, use a named volume (or bind mount) so data
+survives container restarts. Example:
+
+```yaml
+services:
+  proxy-router:
+    image: proxy-chain-router:latest
+    ports:
+      - "3000:3000"
+      - "8080:8080"
+    environment:
+      PROXY_ROUTER_CONFIG: /data/config.json
+      DATABASE_URL: postgres://proxy:proxy@db:5432/proxy_router
+    volumes:
+      - ./config.json:/data/config.json
+    depends_on:
+      - db
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: proxy_router
+      POSTGRES_USER: proxy
+      POSTGRES_PASSWORD: proxy
+    volumes:
+      - proxy-router-db:/var/lib/postgresql/data
+volumes:
+  proxy-router-db:
+```
+Use DATABASE_URL for the Postgres connection string.
+
+## Roadmap
+- Required Postgres-backed persistence for configuration and runtime state.
+- UI served by the API for live status and configuration edits.
+- Optional OpenAPI spec for the REST API.
+
+## Changelog
+```markdown
+## v0.1.0
+- Initial REST API overlay for proxy-chain with routing, config persistence, and metrics.
+```
