@@ -1,0 +1,31 @@
+{
+  "api": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "token": "change-me"
+  },
+  "proxy": {
+    "listen": {
+      "host": "0.0.0.0",
+      "port": 8080,
+      "serverType": "http"
+    },
+    "routes": [
+      {
+        "name": "google",
+        "match": {
+          "domain": {
+            "pattern": "google\\.com$",
+            "flags": "i"
+          }
+        },
+        "upstream": "http://user:pass@us-proxy.example.com:8000"
+      },
+      {
+        "name": "fallback",
+        "upstream": null
+      }
+    ],
+    "verbose": false
+  }
+}
